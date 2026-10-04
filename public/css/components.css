@@ -749,10 +749,12 @@
   font-variant-numeric: tabular-nums;
 }
 .ping__icon { width: .15rem; height: .15rem; margin-right: .03rem; }
+.ping__value { width: 4ch; text-align: right; }
 .ping__unit { font-size: .13rem; color: var(--text-lo); font-weight: 500; }
 .ping--low { --pc: var(--mint-400); }
 .ping--medium { --pc: var(--amber); }
-.ping--high { --pc: var(--red-premium); }
+.ping--high { --pc: var(--orange); }
+.ping--very-high { --pc: var(--red-premium); }
 .ping--off { --pc: var(--text-dim); }
 
 /* ---- difficulty tag ---------------------------------------------------------------------------------- */

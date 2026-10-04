@@ -546,6 +546,35 @@ describe('net.js', () => {
     assert.equal(net.ping, 40);
   });
 
+  test('latency probes every 3 seconds and clears stale RTT on disconnect', async () => {
+    const { PING_INTERVAL_MS } = await mod('net.js');
+    const { net, ws, sockets, timers } = await onlineNet();
+    assert.equal(PING_INTERVAL_MS, 3000);
+    const initialPings = ws().sent.filter((m) => m.t === 'ping').length;
+    timers.advance(2999);
+    assert.equal(ws().sent.filter((m) => m.t === 'ping').length, initialPings);
+    timers.advance(1);
+    assert.equal(ws().sent.filter((m) => m.t === 'ping').length, initialPings + 1);
+
+    const ping = ws().last('ping');
+    timers.advance(25);
+    ws().recv({ t: 'pong', c: ping.c, s: ping.c });
+    assert.equal(net.ping, 25);
+    ws().drop();
+    assert.equal(net.ping, null);
+    assert.equal(net.snapshot().ping, null);
+
+    timers.advance(501);
+    assert.equal(sockets.length, 2);
+    sockets[1].open();
+    const hello = sockets[1].last('hello');
+    sockets[1].recv({ t: 'welcome', rid: hello.rid, playerId: 'p_2', token: 't2', name: '凯尔希', serverNow: 1 });
+    const reconnectPing = sockets[1].last('ping');
+    timers.advance(9);
+    sockets[1].recv({ t: 'pong', c: reconnectPing.c, s: reconnectPing.c });
+    assert.equal(net.ping, 9, 'a fresh RTT is shown after the connection recovers');
+  });
+
   test('silent socket is detected and replaced', async () => {
     const { net, sockets, timers } = await quiet(() => onlineNet());
     await quiet(async () => { timers.advance(20000); });
@@ -591,7 +620,7 @@ describe('net.js', () => {
     net.connect();
     sockets[0].open();
     assert.equal(net.status, 'connected');
-    for (let i = 0; i < 10; i++) { ws0Pong(sockets[0]); timers.advance(4000); } // idle on the title, server answers pings
+    for (let i = 0; i < 10; i++) { ws0Pong(sockets[0]); timers.advance(3000); } // idle on the title, server answers pings
     ws0Pong(sockets[0]);
     const before = statuses.length;
     sockets[0].drop(4002);

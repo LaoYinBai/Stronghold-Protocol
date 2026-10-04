@@ -34,7 +34,7 @@ import { validateC2S } from '../../shared/protocol.js';
 
 export const REQUEST_TIMEOUT_MS = 8000;
 export const HELLO_TIMEOUT_MS = 8000;
-export const PING_INTERVAL_MS = 4000;
+export const PING_INTERVAL_MS = 3000;
 export const DEAD_AFTER_MS = 15000;
 export const BACKOFF = Object.freeze({ base: 500, factor: 2, max: 10000, jitter: 0.2 });
 
@@ -343,6 +343,7 @@ export class Net {
     }
     this.ws = null;
     this._unansweredSince = null;
+    this.ping = null;
     this._clearTimer('_pingTimer', 'clearInterval');
     this._clearTimer('_helloTimer', 'clearTimeout');
     this._helloRid = null;
